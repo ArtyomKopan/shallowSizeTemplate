@@ -4,6 +4,7 @@ val jvmTargetVersion: String by project
 
 plugins {
     kotlin("jvm")
+    id("io.gitlab.arturbosch.detekt") version "1.19.0"
     java
 }
 
@@ -13,6 +14,15 @@ version = "1.0-SNAPSHOT"
 repositories {
     mavenCentral()
 }
+
+dependencies {
+    implementation(kotlin("stdlib"))
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.19.0")
+    testImplementation(platform("org.junit:junit-bom:5.8.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(kotlin("test"))
+}
+
 
 allprojects {
     apply {
