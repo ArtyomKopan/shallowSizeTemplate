@@ -16,7 +16,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          path: 'shallowSizePluginTest/build/test-results/test/'
+          path: 'shallowSizePluginTest/build/test-results/'
 
       - name: Run detekt
         run: ./gradlew detekt
