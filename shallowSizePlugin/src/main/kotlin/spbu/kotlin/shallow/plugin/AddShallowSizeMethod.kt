@@ -26,6 +26,8 @@ import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.properties
 
 const val DEFAULT_SIZE = 8
+const val BOOLEAN_SIZE = 1
+const val UNIT_SIZE = 1
 
 fun IrType.byteSize(): Int =
     when {
@@ -39,7 +41,8 @@ fun IrType.byteSize(): Int =
         this.isLong() -> Long.SIZE_BYTES
         this.isULong() -> ULong.SIZE_BYTES
         this.isDouble() -> Double.SIZE_BYTES
-        this.isBoolean() || this.isUnit() -> 1
+        this.isBoolean() -> BOOLEAN_SIZE
+        this.isUnit() -> UNIT_SIZE
         else -> DEFAULT_SIZE
     }
 
@@ -54,7 +57,8 @@ val Meta.GenerateShallowSize: CliPlugin
                         | $`@annotations` $modality $visibility $kind $name $`(typeParameters)` $`(params)` $superTypes 
                         | {
                         | $body
-                        | fun shallowSize(): Int = TODO()
+                        | fun shallowSize(): Int = 
+                        | throw NoImplementedError("Ошибка: функция shallowSize не определена")
                         | }
                     """.trimMargin().`class`
                 )
@@ -62,7 +66,10 @@ val Meta.GenerateShallowSize: CliPlugin
             irClass
             { clazz ->
                 if (clazz.isData) {
-                    val sizeFunction = clazz.functions.find { it.name.toString() == "shallowSize" }
+                    val sizeFunction = clazz.functions.find {
+                        it.name.toString() == "shallowSize"
+                                && it.valueParameters.isEmpty()
+                    }
                     if (sizeFunction != null) {
                         sizeFunction.body = DeclarationIrBuilder(
                             pluginContext,
@@ -70,7 +77,8 @@ val Meta.GenerateShallowSize: CliPlugin
                             sizeFunction.startOffset,
                             sizeFunction.endOffset
                         ).irBlockBody {
-                            +irReturn(irInt(clazz.properties.map { it.backingField?.type?.byteSize() ?: 0 }.sum()))
+                            val totalSize = clazz.properties.map { it.backingField?.type?.byteSize() ?: 0 }.sum()
+                            +irReturn(irInt(totalSize))
                         }
                     }
                 }
