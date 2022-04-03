@@ -13,7 +13,7 @@ jobs:
         run: ./gradlew test
 
       - name: Publish test report
-        uses: mikepenz/action-junit-report@v3
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           report_paths: 'shallowSizePluginTest/build/test-results/test/TEST-*.xml'
