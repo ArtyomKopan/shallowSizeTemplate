@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.ir.util.properties
 const val DEFAULT_SIZE = 8
 const val BOOLEAN_SIZE = 1
 const val UNIT_SIZE = 1
+const val SHALLOW_SIZE_FUNCTION_NAME = "shallowSize"
 
 fun IrType.byteSize(): Int =
     when {
@@ -67,20 +68,20 @@ val Meta.GenerateShallowSize: CliPlugin
             { clazz ->
                 if (clazz.isData) {
                     val sizeFunction = clazz.functions.find {
-                        it.name.toString() == "shallowSize"
-                                && it.valueParameters.isEmpty()
+                        it.name.toString() == SHALLOW_SIZE_FUNCTION_NAME && it.valueParameters.isEmpty()
                     }
-                    if (sizeFunction != null) {
-                        sizeFunction.body = DeclarationIrBuilder(
-                            pluginContext,
-                            sizeFunction.symbol,
-                            sizeFunction.startOffset,
-                            sizeFunction.endOffset
-                        ).irBlockBody {
-                            val totalSize = clazz.properties.map { it.backingField?.type?.byteSize() ?: 0 }.sum()
-                            +irReturn(irInt(totalSize))
-                        }
+                    checkNotNull(sizeFunction) { "Функция $SHALLOW_SIZE_FUNCTION_NAME не определена" }
+
+                    sizeFunction.body = DeclarationIrBuilder(
+                        pluginContext,
+                        sizeFunction.symbol,
+                        sizeFunction.startOffset,
+                        sizeFunction.endOffset
+                    ).irBlockBody {
+                        val totalSize = clazz.properties.map { it.backingField?.type?.byteSize() ?: 0 }.sum()
+                        +irReturn(irInt(totalSize))
                     }
+
                 }
                 clazz
             }
